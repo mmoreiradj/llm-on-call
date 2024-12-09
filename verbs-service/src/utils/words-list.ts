@@ -1,0 +1,33 @@
+export const verbs = [
+  'gobe',
+  'zoom',
+  'spread',
+  'péte',
+  'ronfle',
+  'dort',
+  'suce',
+  'grimpe',
+  'escalade',
+  'se relève',
+  'se cogne',
+  'se frotte',
+  'se gratte',
+  'se lave',
+  'se suce',
+];
+
+export const adverbes = [
+  'plus',
+  'moins',
+  'autant',
+  'aussi bien',
+  'bien plus',
+  'beaucoup plus',
+  'plus vite',
+  'plus lentement',
+  'plus fort',
+  'plus faiblement',
+  'plus souvent',
+  'plus rarement',
+  'plus longtemps',
+];

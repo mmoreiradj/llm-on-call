@@ -1,0 +1,31 @@
+repositories:
+  - name: nats
+    url: https://nats-io.github.io/k8s/helm/charts/
+
+releases:
+  - name: nats
+    chart: nats/nats
+    namespace: ssi 
+    createNamespace: true
+   
+  - name: gateway
+    chart: gateway
+    createNamespace: true
+    namespace: ssi
+    values:
+      - values/gateway.yaml
+
+  - name: names-service
+    chart: names-service
+    createNamespace: true
+    namespace: ssi
+    values:
+      - values/names-service.yaml
+
+  - name: verbs-service
+    chart: verbs-service
+    createNamespace: true
+    namespace: ssi
+    values:
+      - values/verbs-service.yaml
+

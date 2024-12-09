@@ -1,0 +1,40 @@
+
+services:
+  nats-server:
+    image: nats:latest
+
+  gateway:
+    build:
+      context: ./gateway
+      target: prod
+    restart: always
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./gateway/.env
+    depends_on:
+      - nats-server
+
+  names-service:
+    build:
+      context: ./names-service
+      target: prod
+    restart: always
+    env_file:
+      - ./names-service/.env
+    depends_on:
+      - nats-server
+
+  verbes-service:
+    build:
+      context: ./verbs-service
+      target: prod
+    restart: always
+    env_file:
+      - ./verbs-service/.env
+    depends_on:
+      - nats-server
+
+
+
+
