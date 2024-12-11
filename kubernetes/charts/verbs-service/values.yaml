@@ -1,4 +1,4 @@
-# Default values for names-service.
+# Default values for verbs-service.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -8,10 +8,10 @@ replicaCount: 1
 nats:
   host: nats
   port: 4222
-
+  
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: ssi-names-service
+  repository:  ssi-verbes-service
   # This sets the pull policy for images.
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
@@ -40,7 +40,8 @@ serviceAccount:
 podAnnotations: {}
 # This is for setting Kubernetes Labels to a Pod.
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
-podLabels: {}
+podLabels: 
+  caca.prout.io/name: "names-service"
 
 podSecurityContext: {}
   # fsGroup: 2000
@@ -58,7 +59,7 @@ service:
   # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
   type: ClusterIP
   # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
-  port: 3000
+  port: 80
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
