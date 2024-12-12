@@ -1,0 +1,18 @@
+image:
+  repository: microservices-names-service
+  tag: latest
+
+podLabels: 
+  app.kubernetes.io/name: names-service 
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1500
+
+resources: 
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi

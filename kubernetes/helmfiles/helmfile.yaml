@@ -1,7 +1,4 @@
 repositories:
-  - name: nats
-    url: https://nats-io.github.io/k8s/helm/charts/
-    
   - name: kyverno
     url: https://kyverno.github.io/kyverno/
 
@@ -16,42 +13,50 @@ releases:
       - events: ["postsync"]
         showlogs: true
         command: "kubectl"
-        args: ["apply", "-f", "manifests/kyverno"]
+        args: ["apply", "-f", "../manifests"]
       - events: ["postsync"]
         showlogs: true
         command: "/bin/bash"
-        args: ["-c", "until ./scripts/kyverno-ready.sh; do sleep 3; done"]
+        args: ["-c", "until ../scripts/kyverno-ready.sh; do sleep 3; done"]
         
   - name: nats
-    chart: nats/nats
-    namespace: ssi 
+    chart: oci://registry-1.docker.io/bitnamicharts/nats
+    version: 8.5.1
     createNamespace: true
+    wait: true
+    waitForJobs: true
+    namespace: ssi 
+    values:
+      - values/nats.yaml
     needs:
       - kyverno/kyverno
    
   - name: gateway
-    chart: charts/gateway
+    chart: ../charts/gateway
     createNamespace: true
     namespace: ssi
     values:
       - values/gateway.yaml
     needs:
       - kyverno/kyverno
+      - nats
 
   - name: names-service
-    chart: charts/names-service
+    chart: ../charts/names-service
     createNamespace: true
     namespace: ssi
     values:
       - values/names-service.yaml
     needs:
       - kyverno/kyverno
+      - nats
 
   - name: verbs-service
-    chart: charts/verbs-service
+    chart: ../charts/verbs-service
     createNamespace: true
     namespace: ssi
     values:
       - values/verbs-service.yaml
     needs:
       - kyverno/kyverno
+      - nats

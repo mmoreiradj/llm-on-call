@@ -2,8 +2,13 @@ apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
   name: pod-require-name-label
+  annotations:  
+    policies.kyverno.io/title: Require name label
+    policies.kyverno.io/description: This policy ensures that all pods have a name label.
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: Low
+    policies.kyverno.io/subject: Pod
 spec:
-  validationFailureAction: Enforce
   background: true
   rules:
   - name: check-for-name-label
@@ -19,6 +24,7 @@ spec:
           - kube-system
           - kyverno
     validate:
+      failureAction: Enforce
       message: "label 'app.kubernetes.io/name' is required"
       pattern:
         metadata:

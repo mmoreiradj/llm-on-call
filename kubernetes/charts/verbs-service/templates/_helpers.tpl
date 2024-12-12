@@ -46,7 +46,6 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 Selector labels
 */}}
 {{- define "verbs-service.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "verbs-service.name" . }} # Comment here to reproduce the issue
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 

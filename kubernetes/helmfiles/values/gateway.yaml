@@ -1,0 +1,39 @@
+image:
+  repository: microservices-gateway
+  tag: latest
+  
+  
+podLabels: 
+  app.kubernetes.io/name: gateway
+
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1500
+
+resources: 
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+#### To Kyverno behavior, uncomment the following lines :
+
+# -- Remove the following lines to test the 'require-non-root' policy
+# image:
+#   repository: microservices-gateway-root-user
+#   tag: latest
+
+# -- Remove the following lines to test the 'require-name-label' policy
+# podLabels: 
+#   kyverno.failed/name: "gateway"
+
+# -- Remove the following lines to test the 'require-non-root' policy
+# securityContext:
+#   runAsNonRoot: false
+#   runAsUser: 1500
+
+# -- Remove the following lines to test the 'require-resource-limits' policy
+# resources: {}

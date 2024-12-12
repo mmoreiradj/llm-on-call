@@ -3,9 +3,10 @@ services:
   nats-server:
     image: nats:latest
 
-  gateway:
+  gateway-root-user:
     build:
       context: ./gateway
+      dockerfile: Dockerfile.RootUser
       target: prod
     restart: always
     ports:
@@ -15,9 +16,10 @@ services:
     depends_on:
       - nats-server
 
-  names-service:
+  names-service-root-user:
     build:
       context: ./names-service
+      dockerfile: Dockerfile.RootUser
       target: prod
     restart: always
     env_file:
@@ -25,9 +27,10 @@ services:
     depends_on:
       - nats-server
 
-  verbes-service:
+  verbes-service-root-user:
     build:
       context: ./verbs-service
+      dockerfile: Dockerfile.RootUser
       target: prod
     restart: always
     env_file:

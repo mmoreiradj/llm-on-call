@@ -11,7 +11,7 @@ nats:
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: ssi-gateway
+  repository: ""
   # This sets the pull policy for images.
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
@@ -40,18 +40,13 @@ serviceAccount:
 podAnnotations: {}
 # This is for setting Kubernetes Labels to a Pod.
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
-podLabels: 
-  app.kubernetes.io/name: "gateway"
+podLabels: {}
 
 
 podSecurityContext: {}
   # fsGroup: 2000
 
-securityContext:
-  runAsNonRoot: false
-
-# DEFAULT SECURITY CONTEXT 
-# securityContext: {}
+securityContext: {}
   # capabilities:
   #   drop:
   #   - ALL
