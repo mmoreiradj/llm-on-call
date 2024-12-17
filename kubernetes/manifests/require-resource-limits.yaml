@@ -23,6 +23,7 @@ spec:
           namespaces:
           - kube-system
           - kyverno
+          - falco
     validate:
       failureAction: Enforce
       message: "CPU and memory limits are required."

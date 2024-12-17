@@ -40,28 +40,16 @@ k3d cluster create ssi-cluster
 kubectl config current-context
 ```
 
-3. Créer un namespace pour les services :  
-```bash
-kubectl create namespace ssi
-kubectl create namespace kyverno
-```
-
 > **Note :** Les services seront déployés dans le namespace `ssi`.
 
-4. Switcher vers le namespace `ssi` :    
-```bash
-kubectl config set-context --current --namespace=ssi
-```
-> **Note :** Les services seront déployés dans le namespace `ssi`.
-
-5. Build des images Docker depuis le folder `microservices` :
+3. Build des images Docker depuis le folder `microservices` :
 
 Build `nonRootUser` et `rootUser` images :  
 ```bash
 docker compose -f docker-compose.non-root-user.yaml -f docker-compose.root-user.yaml build
 ```
 
-6. Importer les images `rootUser` et `nonRootUser` dans le cluster K3D :
+4. Importer les images `rootUser` et `nonRootUser` dans le cluster K3D :
 
 Depuis le folder `kubernetes/scripts` :
 
@@ -69,7 +57,7 @@ Depuis le folder `kubernetes/scripts` :
 chmod +x import-kd3-images.sh && ./import-kd3-images.sh
 ```
 
-7. Déployer les services par default `rootUser` depuis le folder `kubernetes/helmfiles` :  
+5. Déployer les services par default `rootUser` depuis le folder `kubernetes/helmfiles` :  
 
 ```bash
 helmfile sync
@@ -77,7 +65,7 @@ helmfile sync
 
 ![helmfile-sync](./docs/img/helmfile-sync.png)
 
-8. Port-forwarding pour accéder à l'application :  
+6. Port-forwarding pour accéder à l'application :  
 ```bash
 kubectl port-forward svc/gateway 3000:3000
 # Ou Shift+F pour port-forwarding depuis K9S.
@@ -131,7 +119,7 @@ Pour reproduire les erreurs `run-as-non-root` , il suffit vous rendre dans le fo
 
 ---
 
-3. Vaildate resource limits (CPU, Memory) 
+3. Vaildate resource limits (CPU, Memory) [manifests/require-resource-limits.admission.yaml](./kubernetes/manifests/require-resource-limits.admission.yaml)
 
 Cette politique Kyverno assure que les conteneurs déployés dans le cluster Kubernetes ont des limites de ressources définies pour le CPU et la mémoire. En cas de non respect de cette politique, un pod sera refusé par le contrôleur d'admission Kyverno.
 
@@ -140,6 +128,55 @@ Cette politique Kyverno assure que les conteneurs déployés dans le cluster Kub
 Pour reproduire les erreurs `require-resource-limits` , il suffit vous rendre dans le folder `kubernetes/helmfiles/values` puis de décommenter la ligne `resources: {}` dans le fichier `gateway.yaml` et de relancer le déploiement avec `helmfile sync`. 
 
 ![resource-blocked](./docs/img/resource-blocked.png)
+
+
+### Mutation Policies
+
+#### !TODO: finish adding mutation policies
+
+**Good practices :**
+Chaque service 
+`mutated` par Kyverno heritera par default de l'annotation `kyverno.io/mutated: "true"`. (See [mutate-security-context](./kubernetes/manifests/mutate-security-context.yaml))
+
+![mutated](./docs/img/mutate-annotation.png)
+
+## Falco 
+
+### Default Falco Rules : quelques exemples
+
+>**Notes :** Vous pouvez accéder aux rules de falco configurer par default depuis le service dans `etc/falco/falco_rules.yaml`.
+
+1. **Detecting shell in container**  
+   - Cette règle Falco détecte l'utilisation d'un shell dans un conteneur.  
+   - Pour reproduire cette règle, vous pouvez exécuter un shell dans un conteneur en utilisant la commande `kubectl exec -it <pod-name> -- /bin/sh`.
+
+Pour tester la règle, vous pouvez exécuter un shell dans un conteneur en utilisant la commande `kubectl exec -it <pod-name> -- /bin/sh`.
+
+Puis vérifier depuis la WebUI de Falco si la règle a été déclenchée.
+
+![shell-in-container](./docs/img/shell-in-container.png)
+![container-id](./docs/img/container-id.png)
+
+2. **Lecture de fichiers sensibles**
+   - Cette règle Falco détecte la lecture de fichiers sensibles
+   - Pour reproduire cette règle, vous pouvez exécuter la commande `cat /etc/shadow` dans un conteneur.
+   
+![read-sensitive-files](./docs/img/read-sensitive-file.png)
+
+### Custom Falco Rules
+
+Vous pouvez retrouver cette customes rules dans les values de falco dans le fichier `kubernetes/helmfiles/values/falco.yaml`.
+
+> **Note :** De la même manière que les règles par default vous pouvez consulter les règles personnalisées dans le fichier `etc/falco/rules.d/do-not-write-etc.yaml`.
+
+![falco-customes-rules](./docs/img/do-not-write-etc.png)
+
+1. **Do not write to /etc**  
+   - Cette règle Falco détecte l'écriture dans le répertoire `/etc`.  
+   - Pour reproduire cette règle, vous pouvez exécuter la commande `touch /etc/<file-to-create>` dans un conteneur.
+
+![write-etc-warning](./docs/img/write-etc-warning.png)
+
 
 
 ## Commandes utiles HELMFILE
@@ -153,3 +190,5 @@ helmfile list
 ```bash
 helmfile -l name=<release-name> <sync|delete>
 ```
+
+                                                                              

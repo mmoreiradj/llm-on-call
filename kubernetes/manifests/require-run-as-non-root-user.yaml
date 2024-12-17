@@ -26,6 +26,8 @@ spec:
           namespaces:
           - kube-system
           - kyverno
+          - falco
+          
     validate:
       failureAction: Enforce
       message: "Containers must not run as root. Set 'runAsNonRoot: true' in the security context."

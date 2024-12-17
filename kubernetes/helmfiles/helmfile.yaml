@@ -1,6 +1,8 @@
 repositories:
   - name: kyverno
     url: https://kyverno.github.io/kyverno/
+  - name: falcosecurity
+    url: https://falcosecurity.github.io/charts
 
 releases:
   - name: kyverno
@@ -18,6 +20,16 @@ releases:
         showlogs: true
         command: "/bin/bash"
         args: ["-c", "until ../scripts/kyverno-ready.sh; do sleep 3; done"]
+  
+  - name: falcosecurity
+    chart: falcosecurity/falco
+    namespace: falco
+    createNamespace: true
+    wait: true
+    waitForJobs: true
+    values:
+      - values/falco.yaml
+ 
         
   - name: nats
     chart: oci://registry-1.docker.io/bitnamicharts/nats
@@ -60,3 +72,4 @@ releases:
     needs:
       - kyverno/kyverno
       - nats
+

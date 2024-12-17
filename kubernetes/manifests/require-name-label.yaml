@@ -23,6 +23,7 @@ spec:
           namespaces:
           - kube-system
           - kyverno
+          - falco
     validate:
       failureAction: Enforce
       message: "label 'app.kubernetes.io/name' is required"
