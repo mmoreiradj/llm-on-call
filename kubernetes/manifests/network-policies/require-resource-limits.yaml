@@ -24,6 +24,7 @@ spec:
           - kube-system
           - kyverno
           - falco
+          - istio-system
     validate:
       failureAction: Enforce
       message: "CPU and memory limits are required."

@@ -18,16 +18,6 @@ Ce projet consiste à déployer une application web composée de trois services 
    - Génère des verbes aléatoires.  
    - Génère des adverbes aléatoires.
 
-## Create Helm Charts
-
-1. Create HELM chart for each service :
-
-```bash
-helm create gateway
-helm create names-service
-helm create verbes-service
-```
-
 ## Déploiement K3D 
 
 1. Créer un cluster K3D avec 3 noeuds :  
@@ -68,13 +58,13 @@ helmfile sync
 6. Port-forwarding pour accéder à l'application :  
 ```bash
 kubectl port-forward svc/gateway 3000:3000
-# Ou Shift+F pour port-forwarding depuis K9S.
+# Ou "Shift+F" pour port-forwarding depuis K9S.
 ```
 > **Note :** L'application est accessible à l'adresse `http://localhost:3000`
 
 ## Flow d'exécution des services
 
-Le fichier `helmfile.yaml` décrit le déploiement ainsi l'ordre des services en utilisant des dépendances. À l'aide des propriétés `needs` et `wait` et `waitForJobs`, Helmfile assure que les services sont déployés dans l'ordre correct : Kyverno avant de déployer NATS puis que NATS soit opérationnel avant de déployer les services `gateway`, `names-service` et `verbs-service`.
+Le fichier `helmfile.yaml` décrit le déploiement ainsi l'ordre des services en utilisant des dépendances. À l'aide des propriétés `needs` et `wait` et `waitForJobs`, Helmfile assure que les services sont déployés dans l'ordre correct : Istio puis Kyverno avant de déployer NATS puis que NATS soit opérationnel avant de déployer les services `gateway`, `names-service` et `verbs-service`.
 
 ## Kyverno
 
@@ -140,6 +130,8 @@ Chaque service
 
 ![mutated](./docs/img/mutate-annotation.png)
 
+
+
 ## Falco 
 
 ### Default Falco Rules : quelques exemples
@@ -177,7 +169,17 @@ Vous pouvez retrouver cette customes rules dans les values de falco dans le fich
 
 ![write-etc-warning](./docs/img/write-etc-warning.png)
 
+## Deployer le projet 
 
+1. Run le deploiement : 
+```bash
+helmfile sync
+```
+
+2. Delete le deploiement : 
+```bash
+helmfile -l app=namespace-creator delete
+```
 
 ## Commandes utiles HELMFILE
 
@@ -191,4 +193,12 @@ helmfile list
 helmfile -l name=<release-name> <sync|delete>
 ```
 
-                                                                              
+- **Linter les erreurs dans les fichiers Helmfile :**  
+```bash
+helmfile lint
+```          
+
+- **Montrer les valeurs de configuration :**   
+```bash
+helm show values <chart-name>
+```

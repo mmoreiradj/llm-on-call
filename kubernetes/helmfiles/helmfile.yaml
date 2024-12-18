@@ -3,49 +3,81 @@ repositories:
     url: https://kyverno.github.io/kyverno/
   - name: falcosecurity
     url: https://falcosecurity.github.io/charts
+  - name: istio
+    url:  https://istio-release.storage.googleapis.com/charts
 
 releases:
-  - name: kyverno
-    chart: kyverno/kyverno
-    namespace: kyverno
+
+  - name: istio-base
+    chart: istio/base
+    version: 1.24.1
+    namespace: istio-system
     createNamespace: true
+    values:
+      - values/istio-base.yaml
+ 
+  - name: istiod
+    chart: istio/istiod
+    version: 1.24.1
+    namespace: istio-system
     wait: true
-    waitForJobs: true
+    needs:
+      - istio-system/istio-base
     hooks:
       - events: ["postsync"]
         showlogs: true
         command: "kubectl"
-        args: ["apply", "-f", "../manifests"]
+        args: ["apply", "-f", "https://raw.githubusercontent.com/istio/istio/release-1.24/samples/addons/kiali.yaml"]
+      - events: ["postsync"]
+        showlogs: true
+        command: "kubectl"
+        args: ["apply", "-f", "https://raw.githubusercontent.com/istio/istio/release-1.24/samples/addons/prometheus.yaml"]
+      - events: ["postsync"]
+        showlogs: true
+        command: "kubectl"
+        args: ["apply","-f", "../manifests/istio/peer-authentification.yaml"]
+        
+  - name: kyverno
+    chart: kyverno/kyverno
+    namespace: kyverno
+    createNamespace: true
+    hooks:
+      - events: ["postsync"]
+        showlogs: true
+        command: "kubectl"
+        args: ["apply", "-f", "../manifests/network-policies"]
       - events: ["postsync"]
         showlogs: true
         command: "/bin/bash"
         args: ["-c", "until ../scripts/kyverno-ready.sh; do sleep 3; done"]
-  
+
+
   - name: falcosecurity
     chart: falcosecurity/falco
+    version: 4.17.0
     namespace: falco
     createNamespace: true
-    wait: true
-    waitForJobs: true
     values:
       - values/falco.yaml
- 
-        
+
   - name: nats
     chart: oci://registry-1.docker.io/bitnamicharts/nats
     version: 8.5.1
-    createNamespace: true
-    wait: true
-    waitForJobs: true
     namespace: ssi 
+    createNamespace: true
     values:
       - values/nats.yaml
+    hooks:
+      - events: ["postsync"]
+        showlogs: true
+        command: "kubectl"
+        args: ["label", "namespace", "ssi", "istio-injection=enabled", "--overwrite"]
     needs:
       - kyverno/kyverno
    
   - name: gateway
     chart: ../charts/gateway
-    createNamespace: true
+    version: 0.1.0
     namespace: ssi
     values:
       - values/gateway.yaml
@@ -55,7 +87,7 @@ releases:
 
   - name: names-service
     chart: ../charts/names-service
-    createNamespace: true
+    version: 0.1.0
     namespace: ssi
     values:
       - values/names-service.yaml
@@ -65,7 +97,7 @@ releases:
 
   - name: verbs-service
     chart: ../charts/verbs-service
-    createNamespace: true
+    version: 0.1.0
     namespace: ssi
     values:
       - values/verbs-service.yaml

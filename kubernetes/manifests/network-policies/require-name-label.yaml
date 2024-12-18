@@ -23,6 +23,7 @@ spec:
           namespaces:
           - kube-system
           - kyverno
+          - istio-system
           - falco
     validate:
       failureAction: Enforce

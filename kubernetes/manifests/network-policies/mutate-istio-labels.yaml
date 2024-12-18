@@ -1,0 +1,32 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: add-istio-labels
+  annotations:
+    policies.kyverno.io/title: Add Istio labels
+    policies.kyverno.io/description: This policy ensures that all pods have the Istio labels.
+    policies.kyverno.io/category: Istio Requirements
+    policies.kyverno.io/severity: Low
+    policies.kyverno.io/subject: Pod
+spec:
+  rules:
+  - name: add-istio-labels
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+    exclude:
+      any:
+      - resources:
+          namespaces:
+          - kube-system
+          - kyverno
+          - istio-system
+          - falco
+    mutate:
+      patchStrategicMerge:
+        metadata:
+          labels:
+            app: "{{ request.object.metadata.labels.\"app.kubernetes.io/name\" }}"
+            version: "{{ values(images.containers)[0].tag || values(images.containers)[0].digest }}"

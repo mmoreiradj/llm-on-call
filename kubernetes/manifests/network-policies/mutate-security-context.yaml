@@ -22,6 +22,7 @@ spec:
       - resources:
           namespaces:
           - kube-system
+          - istio-system
           - kyverno
           - falco
     mutate:
