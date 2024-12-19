@@ -2,6 +2,28 @@
 
 ![Helm](./docs/img/Helm.avif)
 
+## Table des matières
+
+- [Table des matières](#table-des-matières)
+- [Introduction](#introduction)
+- [Architecture de l'application](#architecture-de-lapplication)
+- [Déployer l'application](#déployer-lapplication)
+- [Flow d'exécution des services](#flow-dexécution-des-services)
+- [Kyverno](#kyverno)
+  - [Kyverno integration](#kyverno-integration)
+  - [Admission Policies](#admission-policies)
+  - [Mutation Policies](#mutation-policies)
+    - [Ajouter une annotation aux services déployés](#ajouter-une-annotation-aux-services-déployés)
+    - [Ajouter les labels au bon fonctionnement d'istio](#ajouter-les-labels-au-bon-fonctionnement-distio)
+- [Falco](#falco)
+  - [Default Falco Rules : quelques exemples](#default-falco-rules--quelques-exemples)
+  - [Custom Falco Rules](#custom-falco-rules)
+- [Istio](#istio)
+  - [Peer Authentication](#peer-authentication)
+- [Commandes utiles HELMFILE](#commandes-utiles-helmfile)
+
+## Introduction
+
 Ce projet consiste à déployer une application web composée de trois services dans un cluster Kubernetes local. Voici les spécifications du projet :
 
 ## Architecture de l'application
@@ -18,28 +40,28 @@ Ce projet consiste à déployer une application web composée de trois services 
    - Génère des verbes aléatoires.  
    - Génère des adverbes aléatoires.
 
-## Déploiement K3D 
+## Déployer l'application
 
 1. Créer un cluster K3D avec 3 noeuds :  
 ```bash
 k3d cluster create ssi-cluster 
 ```
 
-2. vérifier que le bon contexte est sélectionné :  
-```bash
+> [!TIP]
+>  Vous pouvez vérifier le contexte actuel de votre cluster avec la commande suivante :
+
+ ```bash
 kubectl config current-context
 ```
 
-> **Note :** Les services seront déployés dans le namespace `ssi`.
-
-3. Build des images Docker depuis le folder `microservices` :
+2. Build des images Docker depuis le folder `microservices` :
 
 Build `nonRootUser` et `rootUser` images :  
 ```bash
 docker compose -f docker-compose.non-root-user.yaml -f docker-compose.root-user.yaml build
 ```
 
-4. Importer les images `rootUser` et `nonRootUser` dans le cluster K3D :
+3. Importer les images `rootUser` et `nonRootUser` dans le cluster K3D :
 
 Depuis le folder `kubernetes/scripts` :
 
@@ -60,7 +82,13 @@ helmfile sync
 kubectl port-forward svc/gateway 3000:3000
 # Ou "Shift+F" pour port-forwarding depuis K9S.
 ```
-> **Note :** L'application est accessible à l'adresse `http://localhost:3000`
+> [!NOTE] 
+> L'application est accessible à l'adresse `http://localhost:3000`
+
+7. Port-forwarding pour accéder à l'interface web Kiali :  
+```bash
+kubectl port-forward svc/kiali -n istio-system 20001:20001
+```
 
 ## Flow d'exécution des services
 
@@ -73,7 +101,6 @@ Le fichier `helmfile.yaml` décrit le déploiement ainsi l'ordre des services en
 Pour s'assurer que Kyverno est prêt avant de déployer les services, un script bash [kyverno-ready.sh](./kubernetes/scripts/kyverno-ready.sh) est exécuté afin de vérifier l'état des `ClusterPolicies`. Le script est exécuté automatiquement par Helmfile à l'aide d'un hook `postsync`.
 
 ![check-policies](./docs/img/check-policies-is-ready.png)
-![policies-created](./docs/img/policies-created.png)
 
 ### Admission Policies 
 
@@ -122,21 +149,30 @@ Pour reproduire les erreurs `require-resource-limits` , il suffit vous rendre da
 
 ### Mutation Policies
 
-#### !TODO: finish adding mutation policies
+![mutate-network-policies](./docs/img/mutate-network-policies.png)
+
+#### Ajouter une annotation aux services déployés
 
 **Good practices :**
-Chaque service 
-`mutated` par Kyverno heritera par default de l'annotation `kyverno.io/mutated: "true"`. (See [mutate-security-context](./kubernetes/manifests/mutate-security-context.yaml))
+Chaque service `mutated` par Kyverno heritera par default de l'annotation `kyverno.io/mutated: "true"`. (See [mutate-security-context](./kubernetes/manifests/mutate-security-context.yaml))
 
 ![mutated](./docs/img/mutate-annotation.png)
 
+
+#### Ajouter les labels au bon fonctionnement d'istio
+
+**Good practices :**
+Afin que Istio puisse marcher correctement il est nécessaire d'ajouter les labels `app` et `version` à chaque pod déployé. (See [mutate-istio-labels](./kubernetes/manifests/network-policies/mutate-istio-labels.yaml))
+
+![mutated](./docs/img/mutate-istio-labels.png)
 
 
 ## Falco 
 
 ### Default Falco Rules : quelques exemples
 
->**Notes :** Vous pouvez accéder aux rules de falco configurer par default depuis le service dans `etc/falco/falco_rules.yaml`.
+> [!NOTE]
+> Vous pouvez accéder aux rules de falco configurer par default depuis le service dans `etc/falco/falco_rules.yaml`.
 
 1. **Detecting shell in container**  
    - Cette règle Falco détecte l'utilisation d'un shell dans un conteneur.  
@@ -159,7 +195,8 @@ Puis vérifier depuis la WebUI de Falco si la règle a été déclenchée.
 
 Vous pouvez retrouver cette customes rules dans les values de falco dans le fichier `kubernetes/helmfiles/values/falco.yaml`.
 
-> **Note :** De la même manière que les règles par default vous pouvez consulter les règles personnalisées dans le fichier `etc/falco/rules.d/do-not-write-etc.yaml`.
+> [!NOTE] 
+> De la même manière que les règles par default vous pouvez consulter les règles personnalisées dans le fichier `etc/falco/rules.d/do-not-write-etc.yaml`.
 
 ![falco-customes-rules](./docs/img/do-not-write-etc.png)
 
@@ -169,17 +206,52 @@ Vous pouvez retrouver cette customes rules dans les values de falco dans le fich
 
 ![write-etc-warning](./docs/img/write-etc-warning.png)
 
-## Deployer le projet 
 
-1. Run le deploiement : 
+## Istio
+
+> [!NOTE]
+> Il est important de préciser que NATS gère nativement le chiffrement des données. Cependant, pour des raisons de démonstration, nous avons décidé de chiffrer le trafic entre les services en utilisant Istio.
+
+Istio est installé dans le namespace `istio-system` avec l'interface web Kiali et une base de données de séries temporelles `Prometheus` qui enregistre les métriques des applications utilisant le service mesh.
+
+Le namespace `ssi`, qui contient les pods de ce projet, est étiqueté avec `istio-injection=enabled`, ce qui indique à Istio d'injecter un conteneur proxy sidecar dans chaque pod déployé dans ce namespace. De plus, une politique Kyverno ajoute les labels `app` et `version` aux pods pour qu'Istio puisse ajouter des informations contextuelles aux métriques et à la télémétrie collectées.
+
+### Peer Authentication
+
+Pour garantir que toutes les communications entre les pods dans le namespace `ssi` sont sécurisées et chiffrées, nous utilisons une politique de Peer Authentication avec `mTLS` (mutual TLS) en mode `STRICT`. Cela assure que toutes les connexions entre les services sont authentifiées et chiffrées. (see [peer-authentication.yaml](./kubernetes/manifests/istio/peer-authentication.yaml))
+
+Pour voir Istio en action, vous pouvez vous connecter à l'interface web Kiali en faisant un port-forwarding de son service avec la commande suivante :
+
 ```bash
-helmfile sync
+kubectl port-forward svc/kiali -n istio-system 20001:20001
 ```
 
-2. Delete le deploiement : 
+![kiali-ui](./docs/img/kiali-ui.png)
+
+> [!WARNING] 
+> Cependant, il semble que le trafic depuis l'interface web Kiali ne soit pas correctement affiché. Selon Kiali, les connexions ne sont pas affichées comme chiffrées par Istio. Cependant, lorsque nous executons une requête et analysons le réseau à partir d'un service kubernetes à l'aide de la commande `tcpdump`, nous pouvons voir que le trafic est belle et bien chiffré.
+
+![kiali-bug](./docs/img/kiali-bug.png)
+
+Pour justifier ce bug il faut passer les `istio-proxy` en mode `privileged=true`, afin de pouvoir run la commande `tcpdump` (see [istiod-proxy](./kubernetes/helmfiles/values/istiod.yaml)).
+
+Pour vérifier que le trafic est bien chiffré, vous pouvez exécuter les commandes suivantes :
+
+1. Requêtez le service `gateway` depuis un client HTTP :
+
 ```bash
-helmfile -l app=namespace-creator delete
+curl -s -X GET http://localhost:3000/api/gateway/phrase
 ```
+
+2. Exécutez la commande `tcpdump` depuis un pod Istio pour capturer le trafic :
+
+```bash
+sudo tcpdump dst port 4222  -A
+```
+
+3. Vous devriez voir le trafic chiffré entre les services :
+
+![tcpdump](./docs/img/tcpdump.png)
 
 ## Commandes utiles HELMFILE
 

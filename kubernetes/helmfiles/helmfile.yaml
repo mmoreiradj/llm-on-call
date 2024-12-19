@@ -21,6 +21,8 @@ releases:
     version: 1.24.1
     namespace: istio-system
     wait: true
+    values:
+      - values/istiod.yaml
     needs:
       - istio-system/istio-base
     hooks:
@@ -73,6 +75,7 @@ releases:
         command: "kubectl"
         args: ["label", "namespace", "ssi", "istio-injection=enabled", "--overwrite"]
     needs:
+      - istio-system/istiod
       - kyverno/kyverno
    
   - name: gateway
