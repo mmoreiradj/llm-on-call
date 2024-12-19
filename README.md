@@ -81,7 +81,10 @@ helmfile sync
 ```bash
 kubectl port-forward svc/gateway 3000:3000
 # Ou "Shift+F" pour port-forwarding depuis K9S.
+# Puis pour tester l'API Gateway :
+curl -s -X GET http://localhost:3000/api/gateway/phrase
 ```
+
 > [!NOTE] 
 > L'application est accessible à l'adresse `http://localhost:3000`
 
