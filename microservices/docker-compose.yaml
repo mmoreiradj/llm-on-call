@@ -1,42 +1,31 @@
 
 services:
-  nats-server:
-    image: nats:latest
 
-  gateway-root-user:
+  gateway:
     build:
       context: ./gateway
-      dockerfile: Dockerfile.RootUser
       target: prod
     restart: always
     ports:
       - "3000:3000"
     env_file:
       - ./gateway/.env
-    depends_on:
-      - nats-server
 
-  names-service-root-user:
+  names-service:
     build:
       context: ./names-service
-      dockerfile: Dockerfile.RootUser
       target: prod
     restart: always
     env_file:
       - ./names-service/.env
-    depends_on:
-      - nats-server
 
-  verbes-service-root-user:
+  verbes-service:
     build:
       context: ./verbs-service
-      dockerfile: Dockerfile.RootUser
       target: prod
     restart: always
     env_file:
       - ./verbs-service/.env
-    depends_on:
-      - nats-server
 
 
 

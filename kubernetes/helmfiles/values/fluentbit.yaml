@@ -1,0 +1,36 @@
+
+config:
+  flush: 1
+  logLevel: info
+  inputs: |
+    [INPUT]
+        name kubernetes_events
+        tag k8s_events
+        kube_url https://kubernetes.default.svc
+        kube_namespace web-s10
+
+  # Uncomment the following lines to enable the stdout output plugin
+  # outputs: |
+  #   [OUTPUT]
+  #       Name  stdout
+  #       Match *
+  #       Format json_lines
+
+  outputs: |
+    [OUTPUT]
+        Name  nats
+        Match * 
+        Host nats.web-s10.svc.cluster.local
+        Port 4222
+rbac:
+  create: true
+  nodeAccess: false
+  rules:
+    - apiGroups:
+        - ""
+      resources:
+        - events
+      verbs:
+        - get
+        - list
+        - watch

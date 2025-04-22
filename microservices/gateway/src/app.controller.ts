@@ -1,24 +1,37 @@
 import { Controller, Get, Inject } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
+import { ClientProxy, MessagePattern, Payload, Ctx, NatsContext  } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
+import { Logger } from '@nestjs/common';
 
 @Controller('gateway')
 export class GatewayController {
+  private readonly logger = new Logger(GatewayController.name);
+
   constructor(
     @Inject('VERBS_SERVICE') private readonly verbesClient: ClientProxy,
     @Inject('NAMES_SERVICE') private readonly nomsClient: ClientProxy,
   ) {}
 
+  @MessagePattern('*')
+  async handleLoggingMessage(
+    @Payload() data: any,
+    @Ctx() context: NatsContext
+  ) {
+    const topic = context.getSubject();
+    this.logger.log(`Received message on topic ${topic}: ${JSON.stringify(data)}`);
+    
+    return {
+      status: 'success',
+      timestamp: new Date().toISOString(),
+      topic,
+      message: data
+    };
+  }
+
   @Get('health')
   async getHealth(): Promise<string> {
     return 'Gateway is up and running';
   }
-
-  // !TODO: Uncomment this method : to test database connection
-  // @Get('ready')
-  // async getReady(): Promise<string> {
-  //   return 'Gateway is ready to serve'
-  // }
 
   @Get('phrase')
   async getPhrase(): Promise<string> {

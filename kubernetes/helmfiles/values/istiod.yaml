@@ -1,3 +1,0 @@
-global:
-  proxy:
-    privileged: true

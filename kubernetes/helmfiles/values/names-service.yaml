@@ -5,10 +5,6 @@ image:
 podLabels: 
   app.kubernetes.io/name: names-service 
 
-securityContext:
-  runAsNonRoot: true
-  runAsUser: 1500
-
 resources: 
   limits:
     cpu: 100m
