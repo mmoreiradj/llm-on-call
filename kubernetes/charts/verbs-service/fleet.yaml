@@ -25,4 +25,6 @@ helm:
 
   # Custom values that will be passed as values.yaml to the installation
   values:
-    replicas: 2
+    image:
+      repository: microservices-verbes-service
+      tag: latest
