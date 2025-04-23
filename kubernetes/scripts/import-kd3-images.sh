@@ -12,7 +12,7 @@ images_name=(
 
 echo "Importing K3D images..."
 for image in "${images_name[@]}"; do
-  k3d image import -c web-s-10-cluster "$image"
+  k3d image import "$image"
 done
 
 echo -e "${GREEN}Image import completed.${NC}"
