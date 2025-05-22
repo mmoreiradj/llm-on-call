@@ -9,3 +9,4 @@ process.env.REPO_URL = 'https://github.com/mmoreiradj/llm-on-call';
 
 console.log('REPO_PATH:', process.env.REPO_PATH);
 console.log('MANIFESTS_PATH:', process.env.MANIFESTS_PATH);
+console.log('REPO_URL:', process.env.REPO_URL);

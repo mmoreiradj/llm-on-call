@@ -2,7 +2,7 @@ import { exec } from "node:child_process";
 import { writeFile } from "fs/promises";
 import path from "path";
 import git from "git-client";
-import { mkdir } from "node:fs/promises";
+import { mkdir, rm, rmdir } from "node:fs/promises";
 import { hash } from "node:crypto";
 import { config } from "../config.js";
 
@@ -38,10 +38,13 @@ async function cleanup() {
 /**
  * Create a pull request for the given branch
  */
-async function createPr(title: string, body: string) {
+async function createPr(title: string, body: string, cwd: string) {
   return new Promise((resolve, reject) => {
     exec(
       `gh pr create --title "${title}" --body "${body}"`,
+      {
+        cwd,
+      },
       (error, stdout, stderr) => {
         if (error) {
           reject(error);
@@ -61,10 +64,7 @@ async function pullRepo(): Promise<string> {
   const uuid = crypto.randomUUID();
   const tempDir = `/tmp/${uuid}`;
   await mkdir(tempDir);
-  await git.clone({
-    gitDir: tempDir,
-    url: config.repoUrl,
-  });
+  await git("clone", config.repoUrl, tempDir);
 
   return tempDir;
 }
@@ -76,31 +76,34 @@ export async function requestChanges({
 }: CommitChangeRequest): Promise<CommitChangeResponse> {
   try {
     const tempDir = await pullRepo();
+    const execOptions = {
+      $cwd: tempDir,
+    };
 
     console.log("tempDir", tempDir);
-    
-    // await git("fetch", "-a");
-    // await git("branch", "-b", branchName);
-    // for (const change of changes) {
-    //   const filePath = isFullPath(change.file)
-    //     ? change.file
-    //     : path.join(process.cwd(), change.file);
-    //   await writeFile(filePath, change.content);
-    //   await git("add", filePath);
-    // }
 
-    // await git("commit", "-m", commitMessage);
-    // await git("push", "-u", "origin", branchName);
+    await git("fetch", "-a", execOptions);
+    await git("checkout", "-b", branchName, execOptions);
 
-    // await git("checkout", "main");
-    // await createPr(commitMessage, commitMessage);
+    for (const change of changes) {
+      const filePath = path.join(tempDir, change.file);
+      await writeFile(filePath, change.content);
+      await git("add", filePath, execOptions);
+    }
+
+    await git("commit", "-m", commitMessage, execOptions);
+    await git("push", "-u", "origin", branchName, execOptions);
+
+    await createPr(commitMessage, commitMessage, tempDir);
+
+    await rm(tempDir, { recursive: true });
 
     return {
       success: true,
       message: "Successfully committed changes",
     };
   } catch (error: unknown) {
-    await cleanup();
+    // await cleanup();
     return {
       error,
     };

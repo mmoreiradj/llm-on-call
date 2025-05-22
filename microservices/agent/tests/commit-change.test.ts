@@ -13,7 +13,7 @@ test('commit changes', async () => {
     branchName: 'test-branch',
     commitMessage: 'test-commit',
     changes: [{
-      file: './microservices/agent/tests/fixtures/my-deployment.yaml',
+      file: 'README.md',
       content: 'test-content',
     }],
   };
