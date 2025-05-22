@@ -17,14 +17,20 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
         h1 {
             color: #333;
             text-align: center;
         }
-        .section {
-            margin-bottom: 30px;
+        h2 {
+            color: #666;
+            margin-top: 0;
         }
         textarea {
             width: 100%;
@@ -43,17 +49,13 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+        }
+        button:hover {
+            background-color: #45a049;
         }
         button:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
-        }
-        button:hover:not(:disabled) {
-            background-color: #45a049;
         }
         .drop-zone {
             border: 2px dashed #ddd;
@@ -61,106 +63,91 @@
             text-align: center;
             margin: 10px 0;
             border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            background-color: #fafafa;
         }
         .drop-zone.dragover {
             background-color: #e1f5fe;
             border-color: #2196F3;
         }
-        .drop-zone.loading {
-            cursor: not-allowed;
-            opacity: 0.7;
-        }
-        #audioPlayer {
-            width: 100%;
+        .status {
             margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .status.success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .status.error {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+        .loading {
+            display: none;
+            margin: 10px 0;
+            text-align: center;
+        }
+        .loading::after {
+            content: "⏳";
+            animation: loading 1s infinite;
+        }
+        @keyframes loading {
+            0% { content: "⏳"; }
+            50% { content: "⌛"; }
+            100% { content: "⏳"; }
         }
         #transcription {
             margin-top: 10px;
             padding: 10px;
-            border: 1px solid #ddd;
+            background-color: #f8f9fa;
             border-radius: 4px;
             min-height: 50px;
-        }
-        .loading-spinner {
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3498db;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            display: none;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .status-message {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 4px;
-            display: none;
-        }
-        .status-message.error {
-            background-color: #ffebee;
-            color: #c62828;
-            border: 1px solid #ffcdd2;
-        }
-        .status-message.success {
-            background-color: #e8f5e9;
-            color: #2e7d32;
-            border: 1px solid #c8e6c9;
         }
     </style>
 </head>
 <body>
-    <h1>TTS & STT API</h1>
-    
     <div class="container">
+        <h1>TTS & STT API</h1>
+        
         <div class="section">
             <h2>Text to Speech</h2>
             <textarea id="ttsText" placeholder="Enter text to convert to speech..."></textarea>
-            <button id="ttsButton" onclick="convertToSpeech()">
-                <span class="loading-spinner" id="ttsSpinner"></span>
-                Convert to Speech
-            </button>
-            <div id="ttsStatus" class="status-message"></div>
-            <audio id="audioPlayer" controls style="display: none;"></audio>
+            <button onclick="convertToSpeech()" id="ttsButton">Convert to Speech</button>
+            <div id="ttsLoading" class="loading"></div>
+            <div id="ttsStatus" class="status"></div>
+            <audio id="audioPlayer" controls style="display: none; margin-top: 10px;"></audio>
         </div>
 
         <div class="section">
             <h2>Speech to Text</h2>
-            <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
-                <p>Drop audio file here or click to select</p>
-                <input type="file" id="fileInput" accept="audio/*" style="display: none;" onchange="handleFileSelect(event)">
+            <div class="drop-zone" id="dropZone">
+                <p>Drag and drop a WAV file here or click to select</p>
+                <input type="file" id="fileInput" accept=".wav" style="display: none;">
             </div>
-            <div id="sttStatus" class="status-message"></div>
+            <div id="sttLoading" class="loading"></div>
+            <div id="sttStatus" class="status"></div>
             <div id="transcription"></div>
         </div>
     </div>
 
     <script>
-        // TTS functionality
+        // TTS Functions
         async function convertToSpeech() {
             const text = document.getElementById('ttsText').value;
-            const button = document.getElementById('ttsButton');
-            const spinner = document.getElementById('ttsSpinner');
-            const status = document.getElementById('ttsStatus');
-            const audioPlayer = document.getElementById('audioPlayer');
-
             if (!text) {
-                showStatus(status, 'Please enter some text', 'error');
+                showStatus('tts', 'Please enter some text', false);
                 return;
             }
 
-            // Show loading state
-            button.disabled = true;
-            spinner.style.display = 'block';
-            status.style.display = 'none';
-            audioPlayer.style.display = 'none';
+            const button = document.getElementById('ttsButton');
+            const loading = document.getElementById('ttsLoading');
+            const audioPlayer = document.getElementById('audioPlayer');
 
             try {
+                button.disabled = true;
+                loading.style.display = 'block';
+                showStatus('tts', 'Converting text to speech...', true);
+
                 const response = await fetch('/api/tts', {
                     method: 'POST',
                     headers: {
@@ -173,71 +160,58 @@
                 if (data.success) {
                     audioPlayer.src = `data:audio/wav;base64,${data.audio}`;
                     audioPlayer.style.display = 'block';
-                    audioPlayer.play();
-                    showStatus(status, 'Audio generated successfully!', 'success');
+                    showStatus('tts', 'Conversion successful!', true);
                 } else {
-                    showStatus(status, 'Error: ' + data.error, 'error');
+                    showStatus('tts', `Error: ${data.error}`, false);
                 }
             } catch (error) {
-                console.error('Error:', error);
-                showStatus(status, 'Error converting text to speech', 'error');
+                showStatus('tts', `Error: ${error.message}`, false);
             } finally {
-                // Reset loading state
                 button.disabled = false;
-                spinner.style.display = 'none';
+                loading.style.display = 'none';
             }
         }
 
-        // STT functionality
+        // STT Functions
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
-        const sttStatus = document.getElementById('sttStatus');
 
-        // Drag and drop handlers
+        dropZone.addEventListener('click', () => fileInput.click());
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
-            if (!dropZone.classList.contains('loading')) {
-                dropZone.classList.add('dragover');
-            }
+            dropZone.classList.add('dragover');
         });
-
         dropZone.addEventListener('dragleave', () => {
             dropZone.classList.remove('dragover');
         });
-
         dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
             dropZone.classList.remove('dragover');
-            if (!dropZone.classList.contains('loading')) {
-                const files = e.dataTransfer.files;
-                if (files.length) {
-                    handleFile(files[0]);
-                }
-            }
+            const file = e.dataTransfer.files[0];
+            if (file) handleFile(file);
+        });
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleFile(file);
         });
 
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (file) {
-                handleFile(file);
-            }
-        }
-
         async function handleFile(file) {
-            if (!file.type.startsWith('audio/')) {
-                showStatus(sttStatus, 'Please select an audio file', 'error');
+            if (!file.name.toLowerCase().endsWith('.wav')) {
+                showStatus('stt', 'Please upload a WAV file', false);
                 return;
             }
 
-            // Show loading state
-            dropZone.classList.add('loading');
-            showStatus(sttStatus, 'Processing audio file...', 'success');
-            document.getElementById('transcription').textContent = '';
-
-            const formData = new FormData();
-            formData.append('audio', file);
+            const loading = document.getElementById('sttLoading');
+            const transcription = document.getElementById('transcription');
 
             try {
+                loading.style.display = 'block';
+                showStatus('stt', 'Converting speech to text...', true);
+                transcription.textContent = '';
+
+                const formData = new FormData();
+                formData.append('audio', file);
+
                 const response = await fetch('/api/stt', {
                     method: 'POST',
                     body: formData,
@@ -245,24 +219,22 @@
 
                 const data = await response.json();
                 if (data.success) {
-                    document.getElementById('transcription').textContent = data.text;
-                    showStatus(sttStatus, 'Audio processed successfully!', 'success');
+                    transcription.textContent = data.text;
+                    showStatus('stt', 'Conversion successful!', true);
                 } else {
-                    showStatus(sttStatus, 'Error: ' + data.error, 'error');
+                    showStatus('stt', `Error: ${data.error}`, false);
                 }
             } catch (error) {
-                console.error('Error:', error);
-                showStatus(sttStatus, 'Error converting speech to text', 'error');
+                showStatus('stt', `Error: ${error.message}`, false);
             } finally {
-                // Reset loading state
-                dropZone.classList.remove('loading');
+                loading.style.display = 'none';
             }
         }
 
-        function showStatus(element, message, type) {
-            element.textContent = message;
-            element.className = 'status-message ' + type;
-            element.style.display = 'block';
+        function showStatus(type, message, isSuccess) {
+            const status = document.getElementById(`${type}Status`);
+            status.textContent = message;
+            status.className = `status ${isSuccess ? 'success' : 'error'}`;
         }
     </script>
 </body>
