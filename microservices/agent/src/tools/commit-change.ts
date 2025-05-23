@@ -5,6 +5,8 @@ import git from "git-client";
 import { mkdir, rm, rmdir } from "node:fs/promises";
 import { hash } from "node:crypto";
 import { config } from "../config.js";
+import { tool } from "@langchain/core/tools";
+import { z } from "zod";
 
 export type CommitChangeRequest = {
   branchName: string;
@@ -109,3 +111,30 @@ export async function requestChanges({
     };
   }
 }
+
+/**
+ * `requestChanges` is a tool that allows you to create a pull request with changes to the git repository.
+ * The repository is cloned from the URL specified in the environment variable `REPO_URL`.
+ * Changes are made in a temporary directory and then pushed to a new branch.
+ *
+ * @param {CommitChangeRequest} request - The request object containing the branch name, commit message, and changes to make.
+ * @returns {Promise<CommitChangeResponse>} - A promise that resolves to the result of the operation.
+ */
+export const requestChangesTool = tool(requestChanges, {
+  name: "requestChanges",
+  description: "Makes a pull request based on the changes provided",
+  schema: z.object({
+    branchName: z.string().describe("The name of the branch to create"),
+    commitMessage: z
+      .string()
+      .describe("The message to commit the changes with"),
+    changes: z
+      .array(
+        z.object({
+          file: z.string().describe("The path to the file to change"),
+          content: z.string().describe("The content to write to the file"),
+        })
+      )
+      .describe("The changes to make to the repository"),
+  }),
+});
