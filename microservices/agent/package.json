@@ -1,6 +1,5 @@
 {
   "name": "agent",
-  "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
@@ -11,6 +10,8 @@
     "@hono/node-server": "^1.14.2",
     "@langchain/core": "^0.3.57",
     "@langchain/langgraph": "^0.2.73",
+    "@langchain/ollama": "^0.2.0",
+    "dotenv": "^16.5.0",
     "git-client": "^1.9.3",
     "hono": "^4.7.10",
     "zod": "^3.25.20"

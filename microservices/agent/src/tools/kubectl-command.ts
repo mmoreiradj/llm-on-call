@@ -1,17 +1,21 @@
 import { z } from "zod";
 import { tool } from "@langchain/core/tools";
 
-export async function runKubectlCommand(command: string): Promise<{
+const schema = z.object({
+  command: z.string().describe("The kubectl command to execute")
+})
+
+export type RunKubectlCommandRequest = z.infer<typeof schema>;
+
+export async function runKubectlCommand({ command }: RunKubectlCommandRequest): Promise<{
   error?: unknown;
   message?: string;
   result?: string;
 }> {
+  console.log("Running kubectl command", command);
   try {
     if (!command.startsWith('kubectl')) {
-      return {
-        error: new Error('Invalid command'),
-        message: 'Command must start with kubectl'
-      };
+      command = `kubectl ${command}`;
     }
 
     const { exec } = require('child_process');
@@ -41,7 +45,5 @@ export async function runKubectlCommand(command: string): Promise<{
 export const runKubectlCommandTool = tool(runKubectlCommand, {
   name: "runKubectlCommand",
   description: "Executes a kubectl command and returns the output",
-  schema: z.object({
-    command: z.string().describe("The kubectl command to execute")
-  })
+  schema,
 });
