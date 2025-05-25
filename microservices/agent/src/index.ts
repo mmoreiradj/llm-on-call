@@ -15,4 +15,13 @@
 // })
 
 import "dotenv/config";
-import "./agent.js";
+// import "./agent.js";
+import listen from "./nats.js";
+
+listen()
+  .then(() => {
+    console.log("NATS listener started");
+  })
+  .catch((err) => {
+    console.error(err);
+  });

@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: my-deployment
+  namespace: dev
 spec:
   selector:
     matchLabels:
@@ -13,10 +14,14 @@ spec:
     spec:
       containers:
       - name: my-deployment
-        image: nginx:alpine
+        image: mmoreiradj/myapp:v1
+        # the requests are as small as possible to trigger and observe the OOMKilled event
         resources:
+          requests:
+            memory: "8Mi"
+            cpu: "10m"
           limits:
-            memory: "128Mi"
-            cpu: "500m"
+            memory: "8Mi"
+            cpu: "10m"
         ports:
         - containerPort: 80

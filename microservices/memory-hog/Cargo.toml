@@ -1,0 +1,11 @@
+[package]
+name = "memory-hog"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ctrlc = "3.4.7"
+
+[[bin]]
+name = "memory-hog"
+path = "main.rs"
