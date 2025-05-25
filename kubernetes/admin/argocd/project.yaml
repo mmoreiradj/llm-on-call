@@ -8,7 +8,7 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
 spec:
   # Project description
-  description: lLLM On Call
+  description: LLM On Call
 
   # Allow manifests to deploy from any Git repos
   sourceRepos:
