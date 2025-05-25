@@ -1,6 +1,7 @@
 import { connect } from "nats";
 import { config } from "./config";
 import { z } from "zod";
+import fixIssue from "./agent";
 
 export const ManagedFieldSchema = z.object({
   manager: z.string(),
@@ -62,6 +63,7 @@ export type Metadata = z.infer<typeof MetadataSchema>;
 export type InvolvedObject = z.infer<typeof InvolvedObjectSchema>;
 export type Source = z.infer<typeof SourceSchema>;
 export type NatsMessage = z.infer<typeof NatsMessageSchema>;
+export type NatsMessageEvent = NatsMessage[1];
 
 async function listen() {
   console.log("Starting NATS listener");
@@ -82,9 +84,19 @@ async function listen() {
       continue;
     }
 
-    for (const [_, message] of parsed.data) {
+    for (const [timestamp, message] of parsed.data) {
+      console.log("Received event", {
+        timestamp,
+        namespace: message.metadata.namespace,
+        name: message.metadata.name,
+        message: message.message,
+        type: message.type,
+        kind: message.kind,
+        reason: message.reason,
+        source: message.source,
+      });
       if (message.type !== "Normal") {
-        console.log(message);
+        fixIssue([timestamp, message]);
       }
     }
   }

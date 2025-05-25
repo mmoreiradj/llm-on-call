@@ -11,6 +11,7 @@
     "@langchain/core": "^0.3.57",
     "@langchain/langgraph": "^0.2.73",
     "@langchain/ollama": "^0.2.0",
+    "@langchain/openai": "^0.5.11",
     "dotenv": "^16.5.0",
     "git-client": "^1.9.3",
     "hono": "^4.7.10",
