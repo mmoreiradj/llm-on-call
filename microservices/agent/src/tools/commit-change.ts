@@ -77,6 +77,11 @@ export async function requestChanges({
   changes,
 }: CommitChangeRequest): Promise<CommitChangeResponse> {
   try {
+    changes = changes.map((change) => ({
+      file: change.file.replace(config.repoPath, ""),
+      content: change.content,
+    }));
+
     const tempDir = await pullRepo();
     const execOptions = {
       $cwd: tempDir,
