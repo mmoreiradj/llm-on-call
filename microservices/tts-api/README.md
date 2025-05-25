@@ -11,7 +11,7 @@ npm install
 
 2. Create a `.env` file in the root directory and add your configuration:
 ```
-PORT=3000
+PORT=3001
 ```
 
 3. Development:
@@ -37,7 +37,7 @@ npm start
 
 2. Open your browser and navigate to:
 ```
-http://localhost:3000
+http://localhost:3001
 ```
 
 ### Features
