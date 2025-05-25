@@ -1,0 +1,81 @@
+repositories:
+- name: argo
+  url: "https://argoproj.github.io/argo-helm"
+- name: nats
+  url: https://nats-io.github.io/k8s/helm/charts/
+- name: fluent
+  url: https://fluent.github.io/helm-charts
+
+helmDefaults:
+  cleanupOnFail: true
+  wait: true
+  atomic: true
+  timeout: 60000
+  force: false
+  createNamespace: true
+
+environments:
+  default:
+    missingFileHandler: Error
+    values: []
+---
+releases:
+- name: argo-cd
+  namespace: argocd
+  chart: argo/argo-cd
+- name: nats
+  namespace: nats
+  chart: nats/nats
+  version: 8.5.1
+  values:
+    - auth:
+        enabled: false
+      resources: 
+        limits:
+          cpu: 100m
+          memory: 128Mi
+        requests:
+          cpu: 100m
+          memory: 128Mi
+- name: fluentbit
+  chart: fluent/fluent-bit
+  version: 3.1.0
+  namespace: fluent-bit
+  values:
+    - config:
+        flush: 1
+        logLevel: info
+        inputs: |
+          [INPUT]
+              name kubernetes_events
+              tag k8s_events
+              kube_url https://kubernetes.default.svc
+              kube_namespace nats
+
+        # Uncomment the following lines to enable the stdout output plugin
+        # outputs: |
+        #   [OUTPUT]
+        #       Name  stdout
+        #       Match *
+        #       Format json_lines
+
+        outputs: |
+          [OUTPUT]
+              Name  nats
+              Match * 
+              Host nats.nats.svc.cluster.local
+              Port 4222
+      rbac:
+        create: true
+        nodeAccess: false
+        rules:
+          - apiGroups:
+              - ""
+            resources:
+              - events
+            verbs:
+              - get
+              - list
+              - watch
+  needs:
+    - nats
