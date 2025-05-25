@@ -19,8 +19,6 @@ const agentModel = createReactAgent({
   checkpointSaver: agentCheckpointer,
 });
 
-console.log("Starting agent");
-
 (async () => {
   const agentFinalState = await agentModel.invoke(
     {
