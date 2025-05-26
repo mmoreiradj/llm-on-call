@@ -14,14 +14,13 @@ spec:
     spec:
       containers:
       - name: my-deployment
-        image: mmoreiradj/myapp:v1
-        # the requests are as small as possible to trigger and observe the OOMKilled event
+        image: mmoreiradj/myapp:v2
         resources:
-          requests:
-            memory: "8Mi"
-            cpu: "10m"
           limits:
-            memory: "8Mi"
-            cpu: "10m"
+            cpu: 100m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 256Mi
         ports:
         - containerPort: 80
